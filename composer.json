@@ -1,0 +1,41 @@
+{
+    "name": "opotopo/laravel-seller-api",
+    "description": "Синхронизация каталога сайта на Laravel с площадкой ОПОТОПО через Seller API",
+    "type": "library",
+    "license": "MIT",
+    "keywords": ["laravel", "opotopo", "seller-api", "catalog", "marketplace"],
+    "require": {
+        "php": "^8.2",
+        "illuminate/console": "^12.0|^13.0",
+        "illuminate/database": "^12.0|^13.0",
+        "illuminate/filesystem": "^12.0|^13.0",
+        "illuminate/http": "^12.0|^13.0",
+        "illuminate/support": "^12.0|^13.0"
+    },
+    "require-dev": {
+        "orchestra/testbench": "^10.0|^11.0",
+        "phpunit/phpunit": "^11.5|^12.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Opotopo\\SellerApi\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Opotopo\\SellerApi\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Opotopo\\SellerApi\\SellerApiServiceProvider"
+            ]
+        }
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}
