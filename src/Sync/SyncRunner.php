@@ -22,8 +22,6 @@ final class SyncRunner
 
     private const FILE_IDS_SEPARATOR = ',';
 
-    private const TOO_MANY_REQUESTS = 429;
-
     public function __construct(
         private readonly SellerApiClient $client,
         private readonly ItemBuilder $builder,
@@ -115,8 +113,7 @@ final class SyncRunner
         try {
             $response = $this->client->sync($payloads, (string) Str::uuid());
         } catch (RequestException $failure) {
-            $status = $failure->response->status();
-            if (! $failure->response->clientError() || $status === self::TOO_MANY_REQUESTS) {
+            if (! $failure->response->clientError() || SellerApiClient::transient($failure->response)) {
                 throw $failure;
             }
             if (count($ready) > 1) {
@@ -132,7 +129,7 @@ final class SyncRunner
                 $ready[0],
                 $known,
                 $report,
-                (string) ($problem['title'] ?? $status),
+                (string) ($problem['title'] ?? $failure->response->status()),
                 array_merge($problem['errors'] ?? [], $problem['details'] ?? []) ?: null,
             );
 

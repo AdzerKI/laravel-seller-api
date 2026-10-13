@@ -29,6 +29,12 @@ class SellerApiClient
 
     private const NOT_FOUND = 404;
 
+    private const CONFLICT = 409;
+
+    private const IDEMPOTENCY_DETAIL = 'details.idempotencyKey';
+
+    private const REQUEST_IN_FLIGHT = 'IDEMPOTENCY_REQUEST_IN_FLIGHT';
+
     private const MILLIS_PER_SECOND = 1000;
 
     private const OCTET_STREAM = 'application/octet-stream';
@@ -111,13 +117,19 @@ class SellerApiClient
         return is_numeric($retryAfter) ? (int) $retryAfter * self::MILLIS_PER_SECOND : $fallback;
     }
 
+    public static function transient(Response $response): bool
+    {
+        return $response->status() === self::TOO_MANY_REQUESTS
+            || $response->serverError()
+            || ($response->status() === self::CONFLICT && $response->json(self::IDEMPOTENCY_DETAIL) === self::REQUEST_IN_FLIGHT);
+    }
+
     private static function retryable(Throwable $failure): bool
     {
         if ($failure instanceof ConnectionException) {
             return true;
         }
 
-        return $failure instanceof RequestException
-            && ($failure->response->status() === self::TOO_MANY_REQUESTS || $failure->response->serverError());
+        return $failure instanceof RequestException && self::transient($failure->response);
     }
 }

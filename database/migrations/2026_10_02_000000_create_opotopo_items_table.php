@@ -21,24 +21,10 @@ return new class extends Migration
             $table->timestamps();
             $table->unique(['catalog', 'model_key']);
         });
-
-        Schema::create('opotopo_files', function (Blueprint $table) {
-            $table->id();
-            $table->string('source', 1024);
-            $table->string('gallery', 32);
-            $table->uuid('category_id');
-            $table->unsignedBigInteger('size');
-            $table->unsignedBigInteger('modified_at');
-            $table->char('checksum', 64);
-            $table->uuid('file_id')->unique();
-            $table->timestamps();
-            $table->unique(['source', 'gallery', 'category_id']);
-        });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('opotopo_files');
         Schema::dropIfExists('opotopo_items');
     }
 };

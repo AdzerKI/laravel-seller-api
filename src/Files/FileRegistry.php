@@ -15,6 +15,8 @@ final class FileRegistry
 
     private const ETAG_HEADER = 'ETag';
 
+    private const SOURCE_HASH = 'sha256';
+
     public function __construct(private readonly SellerApiClient $client) {}
 
     public function attach(PendingItem $item): array
@@ -48,7 +50,7 @@ final class FileRegistry
 
     private function resolve(FileRef $file, string $gallery, string $categoryId): string
     {
-        $target = ['source' => $file->source, 'gallery' => $gallery, 'category_id' => $categoryId];
+        $target = ['source_hash' => hash(self::SOURCE_HASH, $file->source), 'gallery' => $gallery, 'category_id' => $categoryId];
         $known = UploadedFile::query()->where($target)->first();
         $size = $file->size();
         $modifiedAt = $file->modifiedAt();
@@ -63,6 +65,7 @@ final class FileRegistry
         }
         $fileId = $this->upload($file, $gallery, $categoryId, $size);
         UploadedFile::query()->updateOrCreate($target, [
+            'source' => $file->source,
             'size' => $size,
             'modified_at' => $modifiedAt,
             'checksum' => $checksum,

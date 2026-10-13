@@ -207,15 +207,23 @@ final class ItemBuilder
     private static function field(string $field, mixed $value): mixed
     {
         $value = $value instanceof BackedEnum ? $value->value : $value;
-        if ($value === null || is_bool($value) || is_int($value) || is_float($value)) {
+        if ($value === null || is_bool($value) || is_int($value)) {
             return $value;
+        }
+        if (is_float($value)) {
+            return self::number($value);
         }
         $text = (string) $value;
         if (in_array($field, self::NUMERIC_FIELDS, true) && is_numeric($text)) {
-            return $text + 0;
+            return self::number($text + 0);
         }
 
         return $text;
+    }
+
+    private static function number(int|float $value): int|float
+    {
+        return is_float($value) && $value == (int) $value ? (int) $value : $value;
     }
 
     private static function text(mixed $value): ?string
