@@ -2,7 +2,11 @@
 
 namespace Opotopo\SellerApi\Files;
 
+use Closure;
+use GuzzleHttp\Psr7\Utils;
+use Illuminate\Http\Client\RequestException;
 use Opotopo\SellerApi\Catalog\FileRef;
+use Opotopo\SellerApi\Catalog\ItemFailure;
 use Opotopo\SellerApi\Catalog\PendingItem;
 use Opotopo\SellerApi\Http\SellerApiClient;
 use Opotopo\SellerApi\Models\UploadedFile;
@@ -77,19 +81,20 @@ final class FileRegistry
 
     private function upload(FileRef $file, string $gallery, string $categoryId, int $size): string
     {
-        $initiated = $this->client->initiateUpload([
+        $contentType = $file->mimeType();
+        $initiated = $this->accepted($file, fn () => $this->client->initiateUpload([
             'gallery' => $gallery,
             'categoryId' => $categoryId,
             'filename' => $file->name(),
-            'contentType' => $file->mimeType(),
+            'contentType' => $contentType,
             'size' => $size,
-        ]);
-        $headers = $initiated['requiredHeaders'] ?? [];
+        ]));
+        $headers = [SellerApiClient::CONTENT_TYPE_HEADER => $contentType, ...($initiated['requiredHeaders'] ?? [])];
         $stream = $file->stream();
         $parts = [];
         try {
             if (! empty($initiated['singleUrl'])) {
-                $this->client->put($initiated['singleUrl'], $headers, stream_get_contents($stream));
+                $this->client->put($initiated['singleUrl'], $headers, Utils::streamFor($stream, ['size' => $size]));
             } else {
                 $urls = $initiated['partUrls'] ?? [];
                 usort($urls, fn (array $left, array $right) => $left['partNumber'] <=> $right['partNumber']);
@@ -101,9 +106,22 @@ final class FileRegistry
         } finally {
             fclose($stream);
         }
-        $this->client->completeUpload($initiated['fileId'], $parts);
+        $this->accepted($file, fn () => $this->client->completeUpload($initiated['fileId'], $parts));
 
         return $initiated['fileId'];
+    }
+
+    private function accepted(FileRef $file, Closure $call): mixed
+    {
+        try {
+            return $call();
+        } catch (RequestException $failure) {
+            if (! SellerApiClient::rejected($failure->response)) {
+                throw $failure;
+            }
+
+            throw ItemFailure::fromResponse($failure->response, [ItemFailure::FILE_DETAIL => $file->source]);
+        }
     }
 
     private static function read($stream, int $length): string

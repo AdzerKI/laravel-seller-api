@@ -113,7 +113,7 @@ final class SyncRunner
         try {
             $response = $this->client->sync($payloads, (string) Str::uuid());
         } catch (RequestException $failure) {
-            if (! $failure->response->clientError() || SellerApiClient::transient($failure->response)) {
+            if (! SellerApiClient::rejected($failure->response)) {
                 throw $failure;
             }
             if (count($ready) > 1) {
@@ -123,15 +123,8 @@ final class SyncRunner
 
                 return;
             }
-            $problem = $failure->response->json() ?? [];
-            $this->failed(
-                $catalog,
-                $ready[0],
-                $known,
-                $report,
-                (string) ($problem['title'] ?? $failure->response->status()),
-                array_merge($problem['errors'] ?? [], $problem['details'] ?? []) ?: null,
-            );
+            $rejection = ItemFailure::fromResponse($failure->response);
+            $this->failed($catalog, $ready[0], $known, $report, $rejection->error, $rejection->details);
 
             return;
         }

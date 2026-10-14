@@ -120,7 +120,7 @@ final class ItemBuilder
         $files = array_merge($imageFiles, ...$variantFiles);
         foreach ($files as $file) {
             if (! $file->exists()) {
-                throw new ItemFailure(ItemFailure::FILE_NOT_FOUND, ['file' => $file->source]);
+                throw new ItemFailure(ItemFailure::FILE_NOT_FOUND, [ItemFailure::FILE_DETAIL => $file->source]);
             }
         }
         if ($files !== [] && $categoryId === null) {

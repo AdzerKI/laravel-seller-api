@@ -7,6 +7,7 @@ use Illuminate\Http\Client\Factory;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Http\Client\Response;
+use Psr\Http\Message\StreamInterface;
 use Throwable;
 
 class SellerApiClient
@@ -22,6 +23,8 @@ class SellerApiClient
     public const API_KEY_HEADER = 'X-API-Key';
 
     public const IDEMPOTENCY_HEADER = 'Idempotency-Key';
+
+    public const CONTENT_TYPE_HEADER = 'Content-Type';
 
     private const RETRY_AFTER_HEADER = 'Retry-After';
 
@@ -80,10 +83,10 @@ class SellerApiClient
         ]));
     }
 
-    public function put(string $url, array $headers, string $content): Response
+    public function put(string $url, array $headers, StreamInterface|string $content): Response
     {
         return $this->retrying($this->http->withHeaders($headers))
-            ->withBody($content, $headers['Content-Type'] ?? self::OCTET_STREAM)
+            ->withBody($content, $headers[self::CONTENT_TYPE_HEADER] ?? self::OCTET_STREAM)
             ->put($url);
     }
 
@@ -115,6 +118,11 @@ class SellerApiClient
             : '';
 
         return is_numeric($retryAfter) ? (int) $retryAfter * self::MILLIS_PER_SECOND : $fallback;
+    }
+
+    public static function rejected(Response $response): bool
+    {
+        return $response->clientError() && ! self::transient($response);
     }
 
     public static function transient(Response $response): bool
