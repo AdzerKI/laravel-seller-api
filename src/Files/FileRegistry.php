@@ -10,6 +10,7 @@ use Opotopo\SellerApi\Catalog\ItemFailure;
 use Opotopo\SellerApi\Catalog\PendingItem;
 use Opotopo\SellerApi\Http\SellerApiClient;
 use Opotopo\SellerApi\Models\UploadedFile;
+use Psr\Http\Message\StreamInterface;
 
 final class FileRegistry
 {
@@ -90,21 +91,21 @@ final class FileRegistry
             'size' => $size,
         ]));
         $headers = [SellerApiClient::CONTENT_TYPE_HEADER => $contentType, ...($initiated['requiredHeaders'] ?? [])];
-        $stream = $file->stream();
+        $body = Utils::streamFor($file->stream(), ['size' => $size]);
         $parts = [];
         try {
             if (! empty($initiated['singleUrl'])) {
-                $this->client->put($initiated['singleUrl'], $headers, Utils::streamFor($stream, ['size' => $size]));
+                $this->client->put($initiated['singleUrl'], $headers, $body);
             } else {
                 $urls = $initiated['partUrls'] ?? [];
                 usort($urls, fn (array $left, array $right) => $left['partNumber'] <=> $right['partNumber']);
                 foreach ($urls as $part) {
-                    $response = $this->client->put($part['url'], $headers, self::read($stream, (int) $initiated['partSize']));
+                    $response = $this->client->put($part['url'], $headers, self::read($body, (int) $initiated['partSize']));
                     $parts[] = ['partNumber' => $part['partNumber'], 'etag' => $response->header(self::ETAG_HEADER)];
                 }
             }
         } finally {
-            fclose($stream);
+            $body->close();
         }
         $this->accepted($file, fn () => $this->client->completeUpload($initiated['fileId'], $parts));
 
@@ -124,11 +125,11 @@ final class FileRegistry
         }
     }
 
-    private static function read($stream, int $length): string
+    private static function read(StreamInterface $body, int $length): string
     {
         $chunk = '';
-        while (strlen($chunk) < $length && ! feof($stream)) {
-            $chunk .= fread($stream, $length - strlen($chunk));
+        while (strlen($chunk) < $length && ! $body->eof()) {
+            $chunk .= $body->read($length - strlen($chunk));
         }
 
         return $chunk;
