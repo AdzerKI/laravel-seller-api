@@ -2,7 +2,7 @@
 
 # opotopo/laravel-seller-api
 
-Выгрузка каталога сайта на Laravel на площадку ОПОТОПО через Seller API.
+Выгрузка каталога сайта на Laravel на площадку ОПОТОПО, приём вебхуков покупок и выдача данных покупок через Seller API.
 
 ```bash
 composer require opotopo/laravel-seller-api

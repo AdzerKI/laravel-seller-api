@@ -1,6 +1,6 @@
 <?php
 
-namespace Opotopo\SellerApi\Models;
+namespace Opotopo\SellerApi\Laravel\Models;
 
 use Illuminate\Database\Eloquent\Model;
 

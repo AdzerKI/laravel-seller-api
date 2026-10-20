@@ -12,5 +12,10 @@ return [
         'sleep_ms' => 1000,
     ],
     'schedule' => env('OPOTOPO_SCHEDULE', '0 * * * *'),
+    'webhooks' => [
+        'secret' => env('OPOTOPO_WEBHOOK_SECRET'),
+        'path' => env('OPOTOPO_WEBHOOK_PATH', 'opotopo/webhooks'),
+        'dedupe_ttl' => 172800,
+    ],
     'catalogs' => [],
 ];

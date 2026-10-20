@@ -1,20 +1,24 @@
 <?php
 
-namespace Opotopo\SellerApi\Catalog;
+namespace Opotopo\SellerApi\Laravel\Files;
 
 use Illuminate\Contracts\Filesystem\Filesystem;
+use Opotopo\SellerApi\Files\FileSource;
 
-final class FileRef
+final class DiskFile implements FileSource
 {
-    private const HASH = 'sha256';
-
     private const OCTET_STREAM = 'application/octet-stream';
 
     public function __construct(
-        public readonly string $source,
+        private readonly string $source,
         private readonly Filesystem $filesystem,
         private readonly string $path,
     ) {}
+
+    public function source(): string
+    {
+        return $this->source;
+    }
 
     public function exists(): bool
     {
@@ -44,23 +48,5 @@ final class FileRef
     public function stream()
     {
         return $this->filesystem->readStream($this->path);
-    }
-
-    public function checksum(): string
-    {
-        $stream = $this->stream();
-        try {
-            $context = hash_init(self::HASH);
-            hash_update_stream($context, $stream);
-
-            return hash_final($context);
-        } finally {
-            fclose($stream);
-        }
-    }
-
-    public function fingerprint(): array
-    {
-        return [$this->source, $this->size(), $this->modifiedAt()];
     }
 }

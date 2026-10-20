@@ -1,10 +1,12 @@
 <?php
 
-namespace Opotopo\SellerApi\Console;
+namespace Opotopo\SellerApi\Laravel\Console;
 
 use Illuminate\Console\Command;
+use Illuminate\Filesystem\FilesystemManager;
 use InvalidArgumentException;
-use Opotopo\SellerApi\Sync\SyncRunner;
+use Opotopo\SellerApi\Laravel\Catalog\EloquentCatalog;
+use Opotopo\SellerApi\Sync\Synchronizer;
 
 class SyncCommand extends Command
 {
@@ -14,11 +16,15 @@ class SyncCommand extends Command
 
     protected $description = 'Синхронизация каталога сайта с площадкой ОПОТОПО';
 
-    public function handle(SyncRunner $runner): int
+    public function handle(Synchronizer $synchronizer, FilesystemManager $filesystems): int
     {
         $catalog = $this->option('catalog');
+        $catalogs = array_map(
+            fn (array $definition) => new EloquentCatalog($definition, $filesystems),
+            config('opotopo.catalogs'),
+        );
         try {
-            $report = $runner->run($catalog === null ? null : (string) $catalog, (bool) $this->option('full'));
+            $report = $synchronizer->run($catalogs, $catalog === null ? null : (string) $catalog, (bool) $this->option('full'));
         } catch (InvalidArgumentException) {
             $this->error('Каталога «'.$catalog.'» нет в config/opotopo.php');
 

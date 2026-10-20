@@ -1,17 +1,29 @@
 {
     "name": "opotopo/laravel-seller-api",
-    "description": "Синхронизация каталога сайта на Laravel с площадкой ОПОТОПО через Seller API",
+    "description": "Синхронизация каталога, приём вебхуков покупок и выдача данных покупок сайта на Laravel через Seller API ОПОТОПО",
     "type": "library",
     "license": "MIT",
-    "keywords": ["laravel", "opotopo", "seller-api", "catalog", "marketplace"],
+    "keywords": [
+        "laravel",
+        "opotopo",
+        "seller-api",
+        "catalog",
+        "marketplace"
+    ],
+    "support": {
+        "source": "https://github.com/AdzerKI/laravel-seller-api"
+    },
     "require": {
         "php": "^8.2",
-        "guzzlehttp/psr7": "^2.7",
+        "guzzlehttp/psr7": "^2.7|^3.0",
         "illuminate/console": "^12.0|^13.0",
         "illuminate/database": "^12.0|^13.0",
         "illuminate/filesystem": "^12.0|^13.0",
         "illuminate/http": "^12.0|^13.0",
-        "illuminate/support": "^12.0|^13.0"
+        "illuminate/routing": "^12.0|^13.0",
+        "illuminate/support": "^12.0|^13.0",
+        "opotopo/seller-api": "^1.0",
+        "psr/http-client": "^1.0"
     },
     "require-dev": {
         "orchestra/testbench": "^10.0|^11.0",
@@ -20,24 +32,24 @@
     },
     "autoload": {
         "psr-4": {
-            "Opotopo\\SellerApi\\": "src/"
+            "Opotopo\\SellerApi\\Laravel\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Opotopo\\SellerApi\\Tests\\": "tests/"
+            "Opotopo\\SellerApi\\Laravel\\Tests\\": "tests/"
         }
     },
     "extra": {
         "laravel": {
             "providers": [
-                "Opotopo\\SellerApi\\SellerApiServiceProvider"
+                "Opotopo\\SellerApi\\Laravel\\SellerApiServiceProvider"
             ]
         }
     },
     "config": {
         "sort-packages": true
     },
-    "minimum-stability": "stable",
+    "minimum-stability": "dev",
     "prefer-stable": true
 }
