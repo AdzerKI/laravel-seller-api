@@ -49,12 +49,16 @@ class SellerApiServiceProvider extends ServiceProvider
                 ),
             );
         });
-        $this->app->singleton(Synchronizer::class, fn (Application $app) => new Synchronizer(
-            $app->make(SellerApiClient::class),
-            new FileUploader($app->make(SellerApiClient::class), new EloquentFileStore, new HttpFactory),
-            new EloquentItemStore,
-            (int) $app['config'][self::CONFIG]['batch'],
-        ));
+        $this->app->singleton(Synchronizer::class, function (Application $app) {
+            $config = $app['config'][self::CONFIG];
+
+            return new Synchronizer(
+                $app->make(SellerApiClient::class),
+                new FileUploader($app->make(SellerApiClient::class), new EloquentFileStore, new HttpFactory),
+                new EloquentItemStore,
+                (int) $config['batch'],
+            );
+        });
         $this->app->bind(WebhookController::class, function (Application $app) {
             $webhooks = $app['config'][self::CONFIG]['webhooks'];
 
