@@ -49,7 +49,30 @@ class SyncCommand extends Command
                 ], $report->failures),
             );
         }
+        if ($report->gitSources !== []) {
+            $this->table(
+                ['Каталог', 'Артикул', 'Репозиторий', 'Ключ развёртывания', 'Webhook', 'Отказы забора версий'],
+                array_map(fn (array $gitSource) => [
+                    $gitSource['catalog'],
+                    $gitSource['sku'],
+                    $gitSource['source']['repositoryUrl'] ?? '',
+                    $gitSource['source']['deployPublicKey'] ?? '',
+                    $gitSource['source']['webhookUrl'] ?? '',
+                    self::fetchFailures($gitSource['source']),
+                ], $report->gitSources),
+            );
+        }
 
         return self::SUCCESS;
+    }
+
+    private static function fetchFailures(array $source): string
+    {
+        $failures = array_filter([
+            'failure' => $source['failure'] ?? null,
+            'tagFailures' => $source['tagFailures'] ?? [],
+        ]);
+
+        return $failures === [] ? '' : json_encode($failures, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     }
 }
